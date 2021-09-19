@@ -17,3 +17,33 @@ h3 {
 p {
   font-size: 1em;
 }
+
+table {
+ width: 400px;
+
+}
+table th {
+  text-align: left;
+  background-color: rgb(241, 9, 9);
+  color: white;
+  padding: 4px 30px 4px 8px;
+}
+table, th, td{
+  border: 1px solid rgb(12, 12, 12);
+  border-collapse: collapse;
+}
+table tr:nth-child(odd) td{
+  background-color:rgb(253, 182, 182);
+}
+svg {
+  border: 1px solid;
+  width: 232px;
+  height: 10px;
+}
+
+button{
+border: 2px;
+outline: black;
+background-color: blanchedalmond;
+
+}
