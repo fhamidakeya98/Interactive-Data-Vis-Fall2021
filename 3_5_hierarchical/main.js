@@ -1,9 +1,9 @@
 /**
  * CONSTANTS AND GLOBALS
  * */
- const width = window.innerWidth * 0.3,
- height = window.innerHeight * 0.6,
- margin = { top: 20, bottom: 50, left: 60, right: 40 };
+ const width = window.innerWidth * 0.9,
+ height = window.innerHeight * 0.7,
+ margin = { top: 70, bottom: 70, left: 60, right: 40 };
 
 let svg;
 let tooltip;
@@ -14,12 +14,13 @@ let tooltip;
 let state = {
  data: null,
  hover: null
+ // + INITIALIZE STATE
 };
 
 /**
 * LOAD DATA
 * */
-d3.json("../../data/flare.json", d3.autotype).then(data => {
+d3.json("../data/flare.json", d3.autotype).then(data => {
  state.data = data;
  init();
 });
@@ -29,91 +30,97 @@ d3.json("../../data/flare.json", d3.autotype).then(data => {
 * this will be run *one time* when the data finishes loading in
 * */
 function init() {
-
- const colorScale = d3.scaleOrdinal(d3.schemeSet2);
-
+ // with scaleOrdinal, you can specify the color range, and leave the domain blank
+ // as you use the colorScale, it will assign each unique key to a color
+ const colorScale = d3.scaleOrdinal(d3.schemePastel2);
  const container = d3.select("#d3-container").style("position", "relative");
 
  svg = container
    .append("svg")
    .attr("width", width)
-   .attr("height", height)
-   .attr("text-anchor", "middle");
+   .attr("height", height);
 
- // initialize tooltip here — fill it with text in draw whenever state is updated
+ // + INITIALIZE TOOLTIP IN YOUR CONTAINER ELEMENT
  tooltip = container.append("div")
    .attr("class", "tooltip")
-   .style("position", "absolute") 
+   .style("position", "absolute")
    .style("top", 0)
    .style("left", 0)
    .style("background-color", "white")
-   
 
+ // + CREATE YOUR ROOT HIERARCHY NODE
  const root = d3.hierarchy(state.data)
-   .sum(d => d.value) 
+   .sum(d => d.value) // sets the 'value' of each level
    .sort((a, b) => b.value - a.value);
 
- const packLayout = d3.pack()
-   .size([width - 1, height - 1])
-   .padding(2)
+ // + CREATE YOUR LAYOUT GENERATOR
+ const pack = d3.pack() // circle pack
+   .size([width, height])
+   .padding(1)
+   
+// + CALL YOUR LAYOUT FUNCTION ON YOUR ROOT DATA
+   pack(root)
+   const node = root.descendants()
 
- const pack = packLayout(root)
- const node = root.descendants()
-
- // draw tree leaves groups - move into place
- const packGroups = svg
+// + CREATE YOUR GRAPHICAL ELEMENTS
+// draw tree leaves groups - move into place
+ const packGroup = svg
    .selectAll("g")
    .data(node)
    .join("g")
    .attr("transform", d => `translate(${d.x}, ${d.y})`)
 
- // draw tree leaves cirlces
-packGroups.append("circle")
- .attr("r", d => d.r+0.5)
- .attr("fill", d => colorScale(d.height))
- .attr("stroke", "black")
- .attr("width", d => d.x)
- .attr("heigh", d => d.y)
-  
-
- // add mouseover event listener on our group so that it updates state each time one is over
- packGroups
-   .on("mouseenter", (event, d) => { // second argument returns the data associated with that leaf
+ // draw tree leaves rect
+ packGroup.append("circle")
+   .attr("width", d => d.x1 - d.x0)
+   .attr("height", d => d.y1 - d.y0)
+   .attr("stroke", "gray")
+   .attr("fill", d => colorScale(d.height))
+   .attr("r", d => d.r)
+   
+   
+   // packGroup.append("text")
+   //.attr("dy", "1em")
+  // .text(d=>d.data.name)
+   
+   packGroup.on("mouseenter", (event, d)=>{
      state.hover = {
        position: [d.x, d.y],
        name: d.data.name,
-      value: d.data.value,
-       
+       value: d.data.value
      }
-     // fill in the tooltip once state is updated
-     draw()
+     //state.hoverPositionR = d.r
+   
+   draw()
+   
    })
    .on("mouseleave", () => {
-     //reset hover when mouse out of the leaf
      state.hover = null
-     draw();
-   })
-
- draw(); // calls the draw function
-}
-
-/**
-* DRAW FUNCTION
-* we call this everytime there is an update to the data/state
-* */
-function draw() {
- // check if there is something saved to `state.hover`
- if (state.hover) {
-   tooltip
-     .html(
-       `
-   <div>Name: ${state.hover.name}</div>
+     draw(); // calls the draw function
+ })
    
-   `
-     ).transition()
-     .duration(200)
-     .style("transform", `translate(${state.hover.position[0]}px, ${state.hover.position[1]}px )`)
-     .attr("fill", "white")
- }
- tooltip.classed("visible", state.hover)
+   //append text
+   draw(); // calls the draw function
 }
+   
+   /**
+    * DRAW FUNCTION
+    * we call this everytime there is an update to the data/state
+    * */
+    function draw() {
+     // + UPDATE TOOLTIP //working on getting the hover to work
+     if (state.hover) {
+       tooltip
+       .html(
+         `
+         <div>Name: ${state.hover.name}</div>
+         <div>Value: ${state.hover.value}</div>
+         `
+       )
+       .style("font-size","15px")
+       .transition()
+       .duration(300)
+       .style("transform", `translate(${state.hover.position[0]}px,${state.hover.position[1]}px)`)
+     }
+     tooltip.classed("visible", state.hover)
+   }
