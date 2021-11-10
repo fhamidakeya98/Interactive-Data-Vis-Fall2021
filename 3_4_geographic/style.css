@@ -18,9 +18,13 @@ p {
   font-size: 1em;
 }
 
-#tooltip {
-  display: block;
+#hover-content {
+  position: absolute;
   height: 50px;
+  width: fit-content;
+  pointer-events: none;
+  /* top: 200px;
+  left: 100px; */
 }
 
 path.state {
